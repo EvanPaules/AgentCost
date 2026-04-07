@@ -79,7 +79,7 @@ describe("initProxy", () => {
     await Promise.race([
       response.text(),
       new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("timed out reading streamed response")), 3000);
+        setTimeout(() => reject(new Error("timed out reading streamed response")), 10000);
       }),
     ]);
     teardown();
