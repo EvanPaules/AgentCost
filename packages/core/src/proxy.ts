@@ -125,37 +125,34 @@ function tryTrack(
 // ── SSE stream parsing ───────────────────────────────────────
 
 /**
- * Wraps a ReadableStream<Uint8Array> to intercept SSE events and extract
- * usage data from the final event. The original stream is passed through
- * unmodified so the caller sees no difference.
+ * Splits the response body so the caller receives an untouched stream while a
+ * background reader parses usage events. This avoids custom passthrough stream
+ * behavior, which can hang on some Node/undici combinations.
  */
 function wrapStream(
   body: ReadableStream<Uint8Array>,
   tracker: AgentCost,
   provider: Provider,
 ): ReadableStream<Uint8Array> {
+  const [consumerBody, trackingBody] = body.tee();
+  void consumeTrackingStream(trackingBody, tracker, provider);
+  return consumerBody;
+}
+
+async function consumeTrackingStream(
+  body: ReadableStream<Uint8Array>,
+  tracker: AgentCost,
+  provider: Provider,
+): Promise<void> {
   const reader = body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
 
-  return new ReadableStream<Uint8Array>({
-    async pull(controller) {
+  try {
+    while (true) {
       const { done, value } = await reader.read();
-      if (done) {
-        // End of stream  - try to parse anything left in buffer
-        if (provider === "ollama") {
-          parseNdjsonBuffer(buffer, tracker);
-        } else {
-          parseSSEBuffer(buffer, tracker, provider);
-        }
-        controller.close();
-        return;
-      }
+      if (done) break;
 
-      // Forward the raw bytes to the consumer unchanged
-      controller.enqueue(value);
-
-      // Accumulate decoded text to look for usage events
       buffer += decoder.decode(value, { stream: true });
 
       if (provider === "ollama") {
@@ -165,22 +162,29 @@ function wrapStream(
         for (const part of parts) {
           parseNdjsonLine(part, tracker);
         }
-        return;
+        continue;
       }
 
-      // Process complete SSE events (delimited by double newline)
       const parts = buffer.split("\n\n");
-      // Keep the last part as it may be incomplete
       buffer = parts.pop() ?? "";
 
       for (const part of parts) {
         parseSSEEvent(part, tracker, provider);
       }
-    },
-    cancel() {
-      reader.cancel();
-    },
-  });
+    }
+
+    buffer += decoder.decode();
+
+    if (provider === "ollama") {
+      parseNdjsonBuffer(buffer, tracker);
+    } else {
+      parseSSEBuffer(buffer, tracker, provider);
+    }
+  } catch {
+    // Ignore stream read failures and leave tracking best-effort.
+  } finally {
+    reader.releaseLock();
+  }
 }
 
 function parseSSEBuffer(buffer: string, tracker: AgentCost, provider: Provider): void {

@@ -76,7 +76,12 @@ describe("initProxy", () => {
 
     const teardown = initProxy(tracker);
     const response = await fetch("http://127.0.0.1:11434/api/generate", { method: "POST" });
-    await response.text();
+    await Promise.race([
+      response.text(),
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("timed out reading streamed response")), 3000);
+      }),
+    ]);
     teardown();
 
     const report = tracker.getReport();
