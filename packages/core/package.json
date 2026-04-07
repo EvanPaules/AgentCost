@@ -17,7 +17,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "node --import tsx --test src/AgentCost.test.ts src/report.test.ts",
+    "test": "node --import tsx --test src/AgentCost.test.ts src/report.test.ts src/wrappers.test.ts src/proxy.test.ts",
     "prepublishOnly": "npm run build"
   },
   "keywords": [

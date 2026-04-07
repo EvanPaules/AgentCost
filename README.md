@@ -8,8 +8,8 @@ Know exactly what your LLM calls cost, find where you're overspending, and set b
 
 - **Real-time cost tracking**  - log every LLM call with automatic price calculation
 - **40+ models built-in**  - Anthropic, OpenAI, Google Gemini, Mistral, DeepSeek, Meta Llama, Cohere, Amazon Nova
-- **Auto-instrumentation**  - monkey-patch `fetch` to track calls with zero code changes (supports both JSON and streaming/SSE responses)
-- **SDK wrappers**  - wrap the Anthropic or OpenAI client directly for explicit tracking
+- **Auto-instrumentation**  - monkey-patch `fetch` to track calls with zero code changes (supports JSON, SSE, and Ollama NDJSON streams)
+- **SDK wrappers**  - wrap Anthropic, OpenAI, or Ollama clients directly for explicit tracking
 - **Budget alerts**  - get notified when spend crosses a threshold
 - **Rich reports**  - per-model breakdowns, percentage splits, formatted summaries, JSON export
 - **Custom pricing**  - add any model not in the built-in list
@@ -45,8 +45,8 @@ import { createTracker, initProxy, formatReport } from "agentcost";
 const tracker = createTracker();
 const teardown = initProxy(tracker);
 
-// Now any fetch() call to api.anthropic.com or api.openai.com is tracked
-// automatically  - including streaming responses.
+// Now any fetch() call to Anthropic, OpenAI, or Ollama's official
+// local/cloud endpoints is tracked automatically, including streaming responses.
 const res = await fetch("https://api.openai.com/v1/chat/completions", { ... });
 
 console.log(formatReport(tracker.getReport()));
@@ -80,6 +80,25 @@ const client = wrapOpenAI(new OpenAI(), tracker);
 
 const res = await client.chat.completions.create({
   model: "gpt-4o",
+  messages: [{ role: "user", content: "Hello!" }],
+});
+
+console.log(formatReport(tracker.getReport()));
+```
+
+```ts
+import ollama from "ollama";
+import { createTracker, wrapOllama, formatReport } from "agentcost";
+
+const tracker = createTracker({
+  customPricing: {
+    "llama3.2": { inputPer1M: 0, outputPer1M: 0 },
+  },
+});
+const client = wrapOllama(ollama, tracker);
+
+await client.chat({
+  model: "llama3.2",
   messages: [{ role: "user", content: "Hello!" }],
 });
 
@@ -134,6 +153,7 @@ const tracker = createTracker({
 | Meta Llama | Llama 4 Maverick, Scout; Llama 3.1 405B, 70B, 8B (via Together/Fireworks) |
 | Cohere | Command R+, Command R |
 | Amazon | Nova Pro, Lite, Micro |
+| Ollama | Any Ollama model via `customPricing` |
 
 ## API
 
@@ -161,11 +181,11 @@ Clears all steps and resets the budget alert.
 
 ### `initProxy(tracker)`
 
-Patches `globalThis.fetch` to auto-track Anthropic and OpenAI API calls (JSON + streaming). Returns a teardown function.
+Patches `globalThis.fetch` to auto-track Anthropic, OpenAI, and Ollama API calls. Supports JSON, SSE, and Ollama NDJSON streaming. Returns a teardown function.
 
-### `wrapAnthropic(client, tracker)` / `wrapOpenAI(client, tracker)`
+### `wrapAnthropic(client, tracker)` / `wrapOpenAI(client, tracker)` / `wrapOllama(client, tracker)`
 
-Wraps an SDK client to auto-track every API call.
+Wraps an SDK client to auto-track every API call. Ollama integrations typically need `customPricing` because local model names are not part of the built-in pricing table.
 
 ### `analyzeReport(report)` / `formatReport(report)` / `exportReport(report)`
 
