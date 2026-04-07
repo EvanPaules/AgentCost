@@ -259,9 +259,10 @@ export function initProxy(tracker: AgentCost): () => void {
       });
     }
 
-    // Non-streaming: clone and parse JSON in the background
+    // Non-streaming: parse the cloned body before returning so usage tracking
+    // is deterministic across Node versions.
     const clone = response.clone();
-    clone.json().then((json) => {
+    await clone.json().then((json) => {
       tryTrack(tracker, provider, json);
     }).catch(() => {
       // Non-JSON response  - nothing to track
