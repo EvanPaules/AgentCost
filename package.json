@@ -1,0 +1,12 @@
+{
+  "name": "agent-cost",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "clean": "rm -rf packages/*/dist"
+  }
+}
