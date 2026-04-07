@@ -2,17 +2,17 @@
 
 Lightweight cost tracking and optimization for AI agent systems.
 
-Know exactly what your LLM calls cost, find where you're overspending, and set budget guardrails — all in a few lines of code.
+Know exactly what your LLM calls cost, find where you're overspending, and set budget guardrails  - all in a few lines of code.
 
 ## Features
 
-- **Real-time cost tracking** — log every LLM call with automatic price calculation
-- **40+ models built-in** — Anthropic, OpenAI, Google Gemini, Mistral, DeepSeek, Meta Llama, Cohere, Amazon Nova
-- **Auto-instrumentation** — monkey-patch `fetch` to track calls with zero code changes (supports both JSON and streaming/SSE responses)
-- **SDK wrappers** — wrap the Anthropic or OpenAI client directly for explicit tracking
-- **Budget alerts** — get notified when spend crosses a threshold
-- **Rich reports** — per-model breakdowns, percentage splits, formatted summaries, JSON export
-- **Custom pricing** — add any model not in the built-in list
+- **Real-time cost tracking**  - log every LLM call with automatic price calculation
+- **40+ models built-in**  - Anthropic, OpenAI, Google Gemini, Mistral, DeepSeek, Meta Llama, Cohere, Amazon Nova
+- **Auto-instrumentation**  - monkey-patch `fetch` to track calls with zero code changes (supports both JSON and streaming/SSE responses)
+- **SDK wrappers**  - wrap the Anthropic or OpenAI client directly for explicit tracking
+- **Budget alerts**  - get notified when spend crosses a threshold
+- **Rich reports**  - per-model breakdowns, percentage splits, formatted summaries, JSON export
+- **Custom pricing**  - add any model not in the built-in list
 
 ## Install
 
@@ -46,7 +46,7 @@ const tracker = createTracker();
 const teardown = initProxy(tracker);
 
 // Now any fetch() call to api.anthropic.com or api.openai.com is tracked
-// automatically — including streaming responses.
+// automatically  - including streaming responses.
 const res = await fetch("https://api.openai.com/v1/chat/completions", { ... });
 
 console.log(formatReport(tracker.getReport()));
@@ -108,7 +108,7 @@ import { analyzeReport } from "agentcost";
 const detailed = analyzeReport(tracker.getReport());
 
 for (const m of detailed.byModel) {
-  console.log(`${m.model}: $${m.cost.toFixed(4)} (${m.percentOfTotal.toFixed(1)}%) — ${m.calls} calls`);
+  console.log(`${m.model}: $${m.cost.toFixed(4)} (${m.percentOfTotal.toFixed(1)}%)  - ${m.calls} calls`);
 }
 ```
 

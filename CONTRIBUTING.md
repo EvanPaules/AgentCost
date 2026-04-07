@@ -31,15 +31,15 @@ Thanks for your interest in contributing! Here's how to get started.
 
 ## What We're Looking For
 
-- **New model pricing** — if a provider updates prices or a new model drops, PRs welcome
-- **New provider support** — add detection for more API hosts in the proxy
-- **Cost optimization insights** — ideas for helping users understand where to save money
-- **Bug fixes** — if something's wrong, please open an issue or fix it
-- **Documentation** — improvements to README, examples, or inline docs
+- **New model pricing**  - if a provider updates prices or a new model drops, PRs welcome
+- **New provider support**  - add detection for more API hosts in the proxy
+- **Cost optimization insights**  - ideas for helping users understand where to save money
+- **Bug fixes**  - if something's wrong, please open an issue or fix it
+- **Documentation**  - improvements to README, examples, or inline docs
 
 ## Pull Requests
 
-- Keep PRs focused — one feature or fix per PR
+- Keep PRs focused  - one feature or fix per PR
 - Include tests for new functionality
 - Update the README if you're adding user-facing features
 - Make sure `npm test` passes before submitting
@@ -56,7 +56,7 @@ Open an issue on GitHub with:
 
 - TypeScript strict mode
 - No external runtime dependencies
-- Keep it simple — this is a lightweight library
+- Keep it simple  - this is a lightweight library
 
 ## License
 

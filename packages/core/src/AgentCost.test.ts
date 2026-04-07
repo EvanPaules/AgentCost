@@ -82,11 +82,11 @@ describe("budget alert", () => {
     });
 
     // gpt-4o: input $2.50/1M, output $10/1M
-    // This call costs $0.625 — under budget
+    // This call costs $0.625  - under budget
     tracker.track("gpt-4o", 100_000, 50_000);
     assert.equal(alertReport, null);
 
-    // This call costs $0.625 — pushes total to $1.25, over budget
+    // This call costs $0.625  - pushes total to $1.25, over budget
     tracker.track("gpt-4o", 100_000, 50_000);
     assert.notEqual(alertReport, null);
     assert.ok(alertReport!.totalCost >= 1.0);

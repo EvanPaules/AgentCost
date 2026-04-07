@@ -2,7 +2,7 @@ import type { AgentCost } from "./AgentCost.js";
 
 /**
  * Generic interface for an Anthropic-style client.
- * We don't depend on the Anthropic SDK directly — we duck-type it
+ * We don't depend on the Anthropic SDK directly  - we duck-type it
  * so users can wrap any version.
  */
 interface AnthropicMessage {
@@ -51,7 +51,7 @@ export function wrapAnthropic<T extends AnthropicLikeClient>(
         params.metadata as Record<string, unknown> | undefined,
       );
     } catch {
-      // Unknown model — skip
+      // Unknown model  - skip
     }
     return result;
   };
@@ -111,7 +111,7 @@ export function wrapOpenAI<T extends OpenAILikeClient>(
           params.metadata as Record<string, unknown> | undefined,
         );
       } catch {
-        // Unknown model — skip
+        // Unknown model  - skip
       }
     }
     return result;

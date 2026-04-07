@@ -75,7 +75,7 @@ function tryTrack(
     try {
       tracker.track(usage.model, usage.input, usage.output);
     } catch {
-      // Unknown model — silently skip rather than crashing the app
+      // Unknown model  - silently skip rather than crashing the app
     }
   }
 }
@@ -100,7 +100,7 @@ function wrapStream(
     async pull(controller) {
       const { done, value } = await reader.read();
       if (done) {
-        // End of stream — try to parse anything left in buffer
+        // End of stream  - try to parse anything left in buffer
         parseSSEBuffer(buffer, tracker, provider);
         controller.close();
         return;
@@ -161,7 +161,7 @@ function parseSSEEvent(raw: string, tracker: AgentCost, provider: Provider): voi
         }
       }
     } catch {
-      // Not valid JSON — skip
+      // Not valid JSON  - skip
     }
   }
 }
@@ -204,7 +204,7 @@ export function initProxy(tracker: AgentCost): () => void {
     clone.json().then((json) => {
       tryTrack(tracker, provider, json);
     }).catch(() => {
-      // Non-JSON response — nothing to track
+      // Non-JSON response  - nothing to track
     });
 
     return response;
