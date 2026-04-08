@@ -7,6 +7,7 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",
+    "ollama:smoke": "node --import tsx examples/ollama.ts",
     "clean": "rm -rf packages/*/dist"
   }
 }

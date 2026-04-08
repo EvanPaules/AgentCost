@@ -5,4 +5,4 @@ export type { ModelPricing } from "./models.js";
 export { initProxy } from "./proxy.js";
 export { analyzeReport, formatReport, filterSteps, exportReport } from "./report.js";
 export type { ModelBreakdown, DetailedReport } from "./report.js";
-export { wrapAnthropic, wrapOpenAI } from "./wrappers.js";
+export { wrapAnthropic, wrapOllama, wrapOpenAI } from "./wrappers.js";
