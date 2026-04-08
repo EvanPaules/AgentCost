@@ -53,6 +53,8 @@ console.log(formatReport(tracker.getReport()));
 teardown(); // restore original fetch when done
 ```
 
+> **Note:** Use either `initProxy()` or an SDK wrapper (`wrapAnthropic`, `wrapOpenAI`, `wrapOllama`) -- not both at the same time. Combining them will double-count every call.
+
 ### SDK wrappers
 
 ```ts
