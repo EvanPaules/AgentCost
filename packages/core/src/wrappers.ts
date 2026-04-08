@@ -10,8 +10,16 @@ interface AnthropicMessage {
   usage: { input_tokens: number; output_tokens: number };
 }
 
+interface AnthropicStreamEvent {
+  type?: string;
+  model?: string;
+  usage?: { input_tokens: number; output_tokens: number };
+  message?: { model?: string; usage?: { input_tokens: number; output_tokens: number } };
+  delta?: { usage?: { output_tokens: number } };
+}
+
 interface AnthropicMessagesAPI {
-  create(params: Record<string, unknown>): Promise<AnthropicMessage>;
+  create(params: Record<string, unknown>): Promise<AnthropicMessage | AsyncIterable<AnthropicStreamEvent>>;
 }
 
 interface AnthropicLikeClient {
@@ -33,6 +41,39 @@ interface AnthropicLikeClient {
  * console.log(tracker.getReport());
  * ```
  */
+async function* trackAnthropicStream(
+  stream: AsyncIterable<AnthropicStreamEvent>,
+  tracker: AgentCost,
+  meta?: Record<string, unknown>,
+): AsyncGenerator<AnthropicStreamEvent> {
+  let model: string | undefined;
+  let inputTokens = 0;
+  let outputTokens = 0;
+
+  for await (const event of stream) {
+    yield event;
+
+    if (event.model) model = event.model;
+    if (event.message?.model) model = event.message.model;
+
+    if (event.usage) {
+      if (event.usage.input_tokens) inputTokens = event.usage.input_tokens;
+      if (event.usage.output_tokens) outputTokens = event.usage.output_tokens;
+    }
+    if (event.delta?.usage?.output_tokens) {
+      outputTokens = event.delta.usage.output_tokens;
+    }
+  }
+
+  if (model && (inputTokens > 0 || outputTokens > 0)) {
+    try {
+      tracker.track(model, inputTokens, outputTokens, meta);
+    } catch {
+      // Unknown model - skip
+    }
+  }
+}
+
 export function wrapAnthropic<T extends AnthropicLikeClient>(
   client: T,
   tracker: AgentCost,
@@ -41,14 +82,21 @@ export function wrapAnthropic<T extends AnthropicLikeClient>(
 
   client.messages.create = async function trackedCreate(
     params: Record<string, unknown>,
-  ): Promise<AnthropicMessage> {
+  ): Promise<AnthropicMessage | AsyncIterable<AnthropicStreamEvent>> {
     const result = await original(params);
+    const meta = params.metadata as Record<string, unknown> | undefined;
+
+    if (isAsyncIterable<AnthropicStreamEvent>(result)) {
+      return trackAnthropicStream(result, tracker, meta);
+    }
+
+    const msg = result as AnthropicMessage;
     try {
       tracker.track(
-        result.model,
-        result.usage.input_tokens,
-        result.usage.output_tokens,
-        params.metadata as Record<string, unknown> | undefined,
+        msg.model,
+        msg.usage.input_tokens,
+        msg.usage.output_tokens,
+        meta,
       );
     } catch {
       // Unknown model  - skip
@@ -67,8 +115,13 @@ interface OpenAIChatCompletion {
   usage?: { prompt_tokens: number; completion_tokens: number } | null;
 }
 
+interface OpenAIStreamChunk {
+  model?: string;
+  usage?: { prompt_tokens: number; completion_tokens: number } | null;
+}
+
 interface OpenAIChatCompletionsAPI {
-  create(params: Record<string, unknown>): Promise<OpenAIChatCompletion>;
+  create(params: Record<string, unknown>): Promise<OpenAIChatCompletion | AsyncIterable<OpenAIStreamChunk>>;
 }
 
 interface OpenAILikeClient {
@@ -92,6 +145,33 @@ interface OpenAILikeClient {
  * console.log(tracker.getReport());
  * ```
  */
+async function* trackOpenAIStream(
+  stream: AsyncIterable<OpenAIStreamChunk>,
+  tracker: AgentCost,
+  meta?: Record<string, unknown>,
+): AsyncGenerator<OpenAIStreamChunk> {
+  let model: string | undefined;
+
+  for await (const chunk of stream) {
+    yield chunk;
+
+    if (chunk.model) model = chunk.model;
+
+    if (model && chunk.usage) {
+      try {
+        tracker.track(
+          model,
+          chunk.usage.prompt_tokens,
+          chunk.usage.completion_tokens,
+          meta,
+        );
+      } catch {
+        // Unknown model - skip
+      }
+    }
+  }
+}
+
 export function wrapOpenAI<T extends OpenAILikeClient>(
   client: T,
   tracker: AgentCost,
@@ -100,15 +180,22 @@ export function wrapOpenAI<T extends OpenAILikeClient>(
 
   client.chat.completions.create = async function trackedCreate(
     params: Record<string, unknown>,
-  ): Promise<OpenAIChatCompletion> {
+  ): Promise<OpenAIChatCompletion | AsyncIterable<OpenAIStreamChunk>> {
     const result = await original(params);
-    if (result.usage) {
+    const meta = params.metadata as Record<string, unknown> | undefined;
+
+    if (isAsyncIterable<OpenAIStreamChunk>(result)) {
+      return trackOpenAIStream(result, tracker, meta);
+    }
+
+    const completion = result as OpenAIChatCompletion;
+    if (completion.usage) {
       try {
         tracker.track(
-          result.model,
-          result.usage.prompt_tokens,
-          result.usage.completion_tokens,
-          params.metadata as Record<string, unknown> | undefined,
+          completion.model,
+          completion.usage.prompt_tokens,
+          completion.usage.completion_tokens,
+          meta,
         );
       } catch {
         // Unknown model  - skip
