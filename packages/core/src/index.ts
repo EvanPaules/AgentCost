@@ -6,3 +6,5 @@ export { initProxy } from "./proxy.js";
 export { analyzeReport, formatReport, filterSteps, exportReport } from "./report.js";
 export type { ModelBreakdown, DetailedReport } from "./report.js";
 export { wrapAnthropic, wrapOllama, wrapOpenAI } from "./wrappers.js";
+export { compareModels, equivalentCost, formatComparison } from "./compare.js";
+export type { ComparisonTable, EquivalentCost } from "./compare.js";

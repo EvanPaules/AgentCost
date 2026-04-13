@@ -1,10 +1,13 @@
 {
-  "name": "agentcost",
-  "version": "0.2.0",
-  "description": "Lightweight cost tracking and optimization for AI agent systems",
+  "name": "agentcost-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for AgentCost – track LLM costs from any MCP-compatible AI assistant",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "agentcost-mcp": "./dist/cli.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -17,10 +20,12 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "node --import tsx --test src/AgentCost.test.ts src/report.test.ts src/wrappers.test.ts src/proxy.test.ts src/compare.test.ts",
+    "test": "node --import tsx --test src/**/*.test.ts",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
+    "mcp",
+    "model-context-protocol",
     "ai",
     "agent",
     "cost",
@@ -28,13 +33,17 @@
     "llm",
     "openai",
     "anthropic",
-    "gemini",
+    "claude",
     "budget",
     "tracking"
   ],
   "license": "MIT",
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "agentcost": "^0.2.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

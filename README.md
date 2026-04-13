@@ -13,6 +13,7 @@ Know exactly what your LLM calls cost, find where you're overspending, and set b
 - **Budget alerts**  - get notified when spend crosses a threshold
 - **Rich reports**  - per-model breakdowns, percentage splits, formatted summaries, JSON export
 - **Custom pricing**  - add any model not in the built-in list
+- **Cross-model cost comparison**  - see what any run would have cost on GPT-4, Claude, Gemini, DeepSeek, and more
 
 ## Install
 
@@ -133,6 +134,41 @@ for (const m of detailed.byModel) {
 }
 ```
 
+### Compare what your run would have cost on another model
+
+Ever wondered how much that GPT-4o run would have cost on Claude Haiku - or how much you saved by running Ollama locally? One call answers both:
+
+```ts
+import { compareModels, formatComparison } from "agentcost";
+
+console.log(formatComparison(compareModels(tracker.getReport())));
+```
+
+```
+Actual run (gpt-4o): $12.5000
+
+If you had used instead:
+  gemini-2.5-flash             $0.7500  (-$11.7500, -94%)
+  gpt-4o-mini                  $0.7500  (-$11.7500, -94%)
+  claude-haiku-4-5-20251001    $4.8000  (-$7.7000, -62%)
+  deepseek-chat                $1.3700  (-$11.1300, -89%)
+  gemini-2.5-pro               $11.2500 (-$1.2500, -10%)
+  claude-sonnet-4-6            $18.0000 (+$5.5000, +44%)
+  gpt-4o                       $12.5000 (+$0.0000, +0%)
+  claude-opus-4-6              $90.0000 (+$77.5000, +620%)
+```
+
+Pick your own shortlist or price against a single model:
+
+```ts
+import { compareModels, equivalentCost } from "agentcost";
+
+compareModels(report, { models: ["gpt-4o-mini", "claude-haiku-4-5-20251001"] });
+equivalentCost(report, "claude-sonnet-4-6"); // just the dollar figure
+```
+
+Pairs perfectly with `wrapOllama` - track a local run, then see what it would have cost on a cloud provider.
+
 ### Custom pricing
 
 ```ts
@@ -192,6 +228,10 @@ Wraps an SDK client to auto-track every API call. Ollama integrations typically 
 ### `analyzeReport(report)` / `formatReport(report)` / `exportReport(report)`
 
 Enrich, format, or serialize a report.
+
+### `compareModels(report, options?)` / `equivalentCost(report, model)` / `formatComparison(table)`
+
+Re-price a report against other models. `compareModels` returns a ranked table with per-model dollar and percent deltas; `equivalentCost` returns a single number; `formatComparison` renders the table as a human-readable string. Pass `{ models: [...] }` to override the default shortlist or `{ customPricing }` to price against unlisted models.
 
 ### `filterSteps(steps, key, value)`
 
